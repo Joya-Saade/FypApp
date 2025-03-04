@@ -49,7 +49,6 @@
 
     <TextView
         android:id="@+id/textView4"
-        android
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="@font/roboto_mono"
