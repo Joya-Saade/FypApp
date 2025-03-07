@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1021559948067",
+    "project_id": "halo-app-c6a58",
+    "storage_bucket": "halo-app-c6a58.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1021559948067:android:d9ae4c20f412662464c296",
+        "android_client_info": {
+          "package_name": "com.example.halo_test"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOdl_sOnYnajP0Rk4CoRtLsQSn6jZhw3E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
