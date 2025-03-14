@@ -31,7 +31,12 @@
         <activity android:name=".HomeActivity" android:exported="true" />
         <activity android:name=".EmergencyContactActivity" android:exported="true" />
         <activity android:name=".MapsActivity" android:exported="true" />
-        <activity android:name=".RecordActivity" android:exported="true" />
+        <activity android:name=".RecordActivity" android:exported="false" />
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyDPQD6SXFr7M2oA7XxMYC9QglQbIGm6nJE" />
+
     </application>
 
 </manifest>
