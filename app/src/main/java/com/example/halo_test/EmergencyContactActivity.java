@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -20,6 +21,7 @@ import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.SetOptions;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,45 +66,10 @@ public class EmergencyContactActivity extends AppCompatActivity {
 
         btnSaveContact.setOnClickListener(v -> saveEmergencyContact());
         btnEditContact.setOnClickListener(v -> enableEditing());
-        btnSendEmergencyEmail.setOnClickListener(v -> {
-            if (emergencyEmail != null && !emergencyEmail.isEmpty()) {
-                sendEmergencyEmail();
-            } else {
-                Toast.makeText(this, "No emergency contact email found!", Toast.LENGTH_SHORT).show();
-            }
-        });
+        btnSendEmergencyEmail.setOnClickListener(v -> sendEmergencyEmail());
     }
 
-    private void listenForEmergencyTrigger() {
-        if (currentUser == null) return;
-        String userId = currentUser.getUid();
-        DocumentReference docRef = db.collection("EmergencyEvents").document(userId);
-
-        docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
-            @Override
-            public void onEvent(@Nullable DocumentSnapshot document, @Nullable FirebaseFirestoreException e) {
-                if (e != null) {
-                    Log.w("Firestore", "🔥 Listen failed.", e);
-                    return;
-                }
-
-                if (document != null && document.exists()) {
-                    Boolean emergencyTrigger = document.getBoolean("emergency_trigger");
-
-                    if (Boolean.TRUE.equals(emergencyTrigger)) {
-                        Log.d("Firestore", "🚨 Emergency detected! Sending email...");
-                        sendEmergencyEmail();
-                        resetEmergencyTrigger();
-                    } else {
-                        Log.d("Firestore", "✅ No emergency detected.");
-                    }
-                } else {
-                    Log.d("Firestore", "⚠️ Document does not exist.");
-                }
-            }
-        });
-    }
-
+    /*** 🔥 Method to Load Emergency Contact from Firebase ***/
     private void loadEmergencyContact() {
         if (currentUser == null) return;
         String userId = currentUser.getUid();
@@ -133,6 +100,7 @@ public class EmergencyContactActivity extends AppCompatActivity {
         });
     }
 
+    /*** 🔥 Method to Save Emergency Contact to Firebase ***/
     private void saveEmergencyContact() {
         if (currentUser == null) return;
         String userId = currentUser.getUid();
@@ -155,11 +123,12 @@ public class EmergencyContactActivity extends AppCompatActivity {
         db.collection("EmergencyContacts").document(userId).set(contact)
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(this, "Emergency Contact Saved!", Toast.LENGTH_SHORT).show();
-                    loadEmergencyContact();
+                    loadEmergencyContact(); // Refresh UI
                 })
                 .addOnFailureListener(e -> Toast.makeText(this, "Error Saving Contact!", Toast.LENGTH_SHORT).show());
     }
 
+    /*** 🔥 Method to Enable Editing of Emergency Contact ***/
     private void enableEditing() {
         contactCard.setVisibility(View.GONE);
         btnEditContact.setVisibility(View.GONE);
@@ -171,6 +140,31 @@ public class EmergencyContactActivity extends AppCompatActivity {
         inputPhone.setText(contactPhone.getText().toString().replace("Phone: ", ""));
     }
 
+    /*** 🔥 Method to Listen for Emergency Trigger in Firestore ***/
+    private void listenForEmergencyTrigger() {
+        if (currentUser == null) return;
+        String userId = currentUser.getUid();
+        DocumentReference docRef = db.collection("EmergencyEvents").document(userId);
+
+        docRef.addSnapshotListener((document, e) -> {
+            if (e != null) {
+                Log.w("Firestore", "Listen failed.", e);
+                return;
+            }
+
+            if (document != null && document.exists()) {
+                Boolean emergencyTrigger = document.getBoolean("emergency_trigger");
+
+                if (Boolean.TRUE.equals(emergencyTrigger)) {
+                    Log.d("Firestore", "🚨 Emergency detected! Sending email...");
+                    sendEmergencyEmail();
+                    resetEmergencyTrigger();
+                }
+            }
+        });
+    }
+
+    /*** 🔥 Method to Send Emergency Email ***/
     private void sendEmergencyEmail() {
         if (emergencyEmail == null || emergencyEmail.isEmpty()) {
             Log.e("Email", "❌ No emergency contact email found!");
@@ -180,16 +174,16 @@ public class EmergencyContactActivity extends AppCompatActivity {
         String subject = "🚨 Emergency Alert: Immediate Assistance Required!";
         String message = "Dear Emergency Contact,\n\n" +
                 "🚑 Your friend has been in a serious accident and needs immediate assistance.\n\n" +
-                "📍 **Last Known Location:** [Include GPS Coordinates Here]\n\n" +
+                "📍 Last Known Location: [Include GPS Coordinates Here]\n\n" +
                 "Please take immediate action or contact the authorities.\n\n" +
                 "**This is an automated emergency alert from the HALO Smart Helmet System.**\n\n" +
                 "Best regards,\nHALO Emergency System";
 
-        Log.d("Email", "📨 Sending emergency email to: " + emergencyEmail);
         new JavaMailAPI(emergencyEmail, subject, message).execute();
         Toast.makeText(this, "Emergency email sent!", Toast.LENGTH_SHORT).show();
     }
 
+    /*** 🔥 Method to Reset Emergency Trigger in Firebase ***/
     private void resetEmergencyTrigger() {
         if (currentUser == null) return;
         String userId = currentUser.getUid();
@@ -198,8 +192,7 @@ public class EmergencyContactActivity extends AppCompatActivity {
         resetData.put("emergency_trigger", false);
 
         db.collection("EmergencyEvents").document(userId)
-                .set(resetData, SetOptions.merge()) // Merges data instead of overwriting
-                .addOnSuccessListener(aVoid -> Log.d("Firestore", "✅ Emergency trigger reset."))
-                .addOnFailureListener(e -> Log.e("Firestore", "❌ Error resetting trigger", e));
+                .set(resetData, SetOptions.merge())
+                .addOnSuccessListener(aVoid -> Log.d("Firestore", "✅ Emergency trigger reset."));
     }
 }
