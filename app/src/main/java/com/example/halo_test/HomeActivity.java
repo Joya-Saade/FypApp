@@ -13,7 +13,7 @@ import com.google.firebase.auth.FirebaseUser;
 public class HomeActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private TextView welcomeText;
-    private Button logoutButton, emergencyButton;
+    private Button logoutButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,8 +27,6 @@ public class HomeActivity extends AppCompatActivity {
         // Link UI Elements
         welcomeText = findViewById(R.id.textWelcome);
         logoutButton = findViewById(R.id.buttonLogout);
-        emergencyButton = findViewById(R.id.buttonEmergency); // Emergency button
-
 
         // Display Welcome Message
         if (user != null) {
@@ -47,14 +45,6 @@ public class HomeActivity extends AppCompatActivity {
                 Toast.makeText(HomeActivity.this, "Logged out!", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(HomeActivity.this, SignInActivity.class));
                 finish(); // Close HomeActivity
-            }
-        });
-
-        emergencyButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(HomeActivity.this, EmergencyContactActivity.class);
-                startActivity(intent);
             }
         });
     }

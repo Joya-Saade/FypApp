@@ -7,11 +7,6 @@ android {
     namespace 'com.example.halo_test'
     compileSdk 35
 
-    packagingOptions {
-        exclude 'META-INF/NOTICE.md'
-        exclude 'META-INF/LICENSE.md'
-    }
-
     defaultConfig {
         applicationId "com.example.halo_test"
         minSdk 25
@@ -38,16 +33,11 @@ dependencies {
     implementation platform('com.google.firebase:firebase-bom:33.10.0')
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-database'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'com.sun.mail:android-mail:1.6.7'
-    implementation 'com.sun.mail:android-activation:1.6.7'
-
 
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity
     implementation libs.constraintlayout
-    implementation libs.firebase.firestore
 
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
