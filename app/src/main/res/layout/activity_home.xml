@@ -37,4 +37,12 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_bias="0.5" />
 
+    <Button
+        android:id="@+id/buttonMaps"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="Open Maps"
+        tools:layout_editor_absoluteX="152dp"
+        tools:layout_editor_absoluteY="523dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>
