@@ -15,7 +15,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class SignUpActivity extends AppCompatActivity {
     private EditText fullName, email, password, confirmPassword;
-    private Button signUpButton;
+    private Button signUpButton, signInButton; // Added Sign-In Button
     private FirebaseAuth mAuth;
     private DatabaseReference databaseReference;
 
@@ -34,12 +34,23 @@ public class SignUpActivity extends AppCompatActivity {
         password = findViewById(R.id.editTextPassword);
         confirmPassword = findViewById(R.id.editTextConfirmPassword);
         signUpButton = findViewById(R.id.buttonSignUp);
+        signInButton = findViewById(R.id.buttonSignIn); // Link the Sign-In Button
 
         // Handle Sign Up Button Click
         signUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 registerUser();
+            }
+        });
+
+        // Handle Sign-In Button Click
+        signInButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(SignUpActivity.this, SignInActivity.class);
+                startActivity(intent);
+                finish();
             }
         });
     }

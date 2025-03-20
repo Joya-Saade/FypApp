@@ -59,31 +59,37 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         TextView searchButton = findViewById(R.id.search_button);
         searchButton.setOnClickListener(v -> showDestinationPopup());
 
-        // Record Button → Opens RecordActivity
+        // ✅ Record Button → Opens RecordActivity
         ImageButton buttonRecord = findViewById(R.id.nav_record);
         buttonRecord.setOnClickListener(v -> {
             if (currentLocation != null && gMap != null) {
-                // Zoom in before switching activities
                 gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
 
-                // Delay opening activity to allow zoom animation to complete
                 buttonRecord.postDelayed(() -> {
                     Intent intent = new Intent(MapsActivity.this, RecordActivity.class);
                     intent.putExtra("latitude", currentLocation.latitude);
                     intent.putExtra("longitude", currentLocation.longitude);
                     startActivity(intent);
-                }, 800); // 800ms delay for smooth transition
+                }, 800);
             } else {
                 Toast.makeText(MapsActivity.this, "Location not available yet!", Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Home Button → Opens HomeActivity
+        // ✅ Home Button → Opens HomeActivity
         ImageButton buttonHome = findViewById(R.id.nav_home);
         buttonHome.setOnClickListener(v -> {
             Intent intent = new Intent(MapsActivity.this, HomeActivity.class);
             startActivity(intent);
-            finish(); // Close MapsActivity
+            finish();
+        });
+
+        // ✅ History Button → Opens HistoryActivity
+        ImageButton buttonHistory = findViewById(R.id.nav_history);
+        buttonHistory.setOnClickListener(v -> {
+            Intent intent = new Intent(MapsActivity.this, HistoryActivity.class);
+            startActivity(intent);
+            finish();
         });
 
         // Request Location Permissions
@@ -163,22 +169,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void updateMapWithLocation(Location location) {
         if (gMap == null || location == null) {
-            return; // Ensure the map and location are not null
+            return;
         }
 
         currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
 
-        // Remove the old marker if it exists
         if (userMarker != null) {
             userMarker.remove();
         }
 
-        // Add a new marker at the current location
         userMarker = gMap.addMarker(new MarkerOptions()
                 .position(currentLocation)
                 .title("You are here"));
 
-        // Ensure auto-zoom works when location updates
         gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 18));
     }
 
@@ -205,7 +208,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void startNavigation(String destination) {
-        String uri = "google.navigation:q=" + destination + "&mode=d"; // 'd' mode = driving
+        String uri = "google.navigation:q=" + destination + "&mode=d";
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
         intent.setPackage("com.google.android.apps.maps");
 

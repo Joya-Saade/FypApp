@@ -22,8 +22,8 @@ public class JavaMailAPI extends AsyncTask<Void, Void, Void> {
 
     @Override
     protected Void doInBackground(Void... voids) {
-        final String senderEmail = "joeyangelil357@gmail.com"; // Replace with your email
-        final String senderPassword = "fhxj jzky vsst ctlp"; // Replace with your Gmail app password
+        final String senderEmail = "halo.attachment@gmail.com"; // Replace with your email
+        final String senderPassword = "aaxd llcx rmqt koln"; // Replace with your Gmail app password
 
         Properties properties = new Properties();
         properties.put("mail.smtp.auth", "true");

@@ -1,15 +1,15 @@
 package com.example.halo_test;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
@@ -46,7 +46,7 @@ public class EmergencyContactActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        // UI Element Initialization
+        // UI Elements
         inputLayout = findViewById(R.id.inputLayout);
         contactCard = findViewById(R.id.contactCard);
         inputName = findViewById(R.id.inputName);
@@ -60,16 +60,44 @@ public class EmergencyContactActivity extends AppCompatActivity {
         btnEditContact = findViewById(R.id.btnEditContact);
         btnSendEmergencyEmail = findViewById(R.id.btnSendEmergencyEmail);
 
-        // Load stored contact details & listen for emergency triggers
+        // Load emergency contact details & listen for emergency triggers
         loadEmergencyContact();
         listenForEmergencyTrigger();
 
         btnSaveContact.setOnClickListener(v -> saveEmergencyContact());
         btnEditContact.setOnClickListener(v -> enableEditing());
         btnSendEmergencyEmail.setOnClickListener(v -> sendEmergencyEmail());
+
+        // 🔹 Bottom Navigation Bar Buttons
+        ImageButton homeButton = findViewById(R.id.nav_home);
+        ImageButton recordButton = findViewById(R.id.nav_record);
+        ImageButton locationButton = findViewById(R.id.nav_location);
+        ImageButton historyButton = findViewById(R.id.nav_history); // Added history button
+
+        // ✅ Navigation Button Click Listeners
+        homeButton.setOnClickListener(v -> {
+            Intent intent = new Intent(EmergencyContactActivity.this, HomeActivity.class);
+            startActivity(intent);
+        });
+
+        recordButton.setOnClickListener(v -> {
+            Intent intent = new Intent(EmergencyContactActivity.this, RecordActivity.class);
+            startActivity(intent);
+        });
+
+        locationButton.setOnClickListener(v -> {
+            Intent intent = new Intent(EmergencyContactActivity.this, MapsActivity.class);
+            startActivity(intent);
+        });
+
+        // ✅ History Button → Opens HistoryActivity
+        historyButton.setOnClickListener(v -> {
+            Intent intent = new Intent(EmergencyContactActivity.this, HistoryActivity.class);
+            startActivity(intent);
+        });
     }
 
-    /*** 🔥 Method to Load Emergency Contact from Firebase ***/
+    /*** 🔥 Load Emergency Contact from Firestore ***/
     private void loadEmergencyContact() {
         if (currentUser == null) return;
         String userId = currentUser.getUid();
@@ -100,12 +128,11 @@ public class EmergencyContactActivity extends AppCompatActivity {
         });
     }
 
-    /*** 🔥 Method to Save Emergency Contact to Firebase ***/
+    /*** 🔥 Save Emergency Contact ***/
     private void saveEmergencyContact() {
         if (currentUser == null) return;
         String userId = currentUser.getUid();
 
-        // Validate input fields
         String name = inputName.getText().toString().trim();
         String email = inputEmail.getText().toString().trim();
         String phone = inputPhone.getText().toString().trim();
@@ -123,12 +150,12 @@ public class EmergencyContactActivity extends AppCompatActivity {
         db.collection("EmergencyContacts").document(userId).set(contact)
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(this, "Emergency Contact Saved!", Toast.LENGTH_SHORT).show();
-                    loadEmergencyContact(); // Refresh UI
+                    loadEmergencyContact();
                 })
                 .addOnFailureListener(e -> Toast.makeText(this, "Error Saving Contact!", Toast.LENGTH_SHORT).show());
     }
 
-    /*** 🔥 Method to Enable Editing of Emergency Contact ***/
+    /*** 🔥 Enable Editing of Contact Info ***/
     private void enableEditing() {
         contactCard.setVisibility(View.GONE);
         btnEditContact.setVisibility(View.GONE);
@@ -140,7 +167,7 @@ public class EmergencyContactActivity extends AppCompatActivity {
         inputPhone.setText(contactPhone.getText().toString().replace("Phone: ", ""));
     }
 
-    /*** 🔥 Method to Listen for Emergency Trigger in Firestore ***/
+    /*** 🔥 Listen for Emergency Trigger in Firestore ***/
     private void listenForEmergencyTrigger() {
         if (currentUser == null) return;
         String userId = currentUser.getUid();
@@ -156,7 +183,6 @@ public class EmergencyContactActivity extends AppCompatActivity {
                 Boolean emergencyTrigger = document.getBoolean("emergency_trigger");
 
                 if (Boolean.TRUE.equals(emergencyTrigger)) {
-                    Log.d("Firestore", "🚨 Emergency detected! Sending email...");
                     sendEmergencyEmail();
                     resetEmergencyTrigger();
                 }
@@ -164,7 +190,7 @@ public class EmergencyContactActivity extends AppCompatActivity {
         });
     }
 
-    /*** 🔥 Method to Send Emergency Email ***/
+    /*** 🔥 Send Emergency Email ***/
     private void sendEmergencyEmail() {
         if (emergencyEmail == null || emergencyEmail.isEmpty()) {
             Log.e("Email", "❌ No emergency contact email found!");
@@ -172,18 +198,18 @@ public class EmergencyContactActivity extends AppCompatActivity {
         }
 
         String subject = "🚨 Emergency Alert: Immediate Assistance Required!";
-        String message = "Dear Emergency Contact,\n\n" +
-                "🚑 Your friend has been in a serious accident and needs immediate assistance.\n\n" +
-                "📍 Last Known Location: [Include GPS Coordinates Here]\n\n" +
-                "Please take immediate action or contact the authorities.\n\n" +
-                "**This is an automated emergency alert from the HALO Smart Helmet System.**\n\n" +
-                "Best regards,\nHALO Emergency System";
+        String message = "Dear Emergency Contact,\n\n"
+                + "🚑 Your friend has been in a serious accident and needs immediate assistance.\n\n"
+                + "📍 Last Known Location: [Include GPS Coordinates Here]\n\n"
+                + "Please take immediate action or contact the authorities.\n\n"
+                + "**This is an automated emergency alert from the HALO Smart Helmet System.**\n\n"
+                + "Best regards,\nHALO Emergency System";
 
         new JavaMailAPI(emergencyEmail, subject, message).execute();
         Toast.makeText(this, "Emergency email sent!", Toast.LENGTH_SHORT).show();
     }
 
-    /*** 🔥 Method to Reset Emergency Trigger in Firebase ***/
+    /*** 🔥 Reset Emergency Trigger in Firebase ***/
     private void resetEmergencyTrigger() {
         if (currentUser == null) return;
         String userId = currentUser.getUid();

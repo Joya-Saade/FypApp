@@ -16,7 +16,7 @@ public class SignInActivity extends AppCompatActivity {
     private EditText email, password;
     private Button loginButton;
     private FirebaseAuth mAuth;
-    private TextView signUpLink;
+    private TextView signUpText; // "Sign up now!" clickable text
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,8 +29,8 @@ public class SignInActivity extends AppCompatActivity {
         // Link UI Elements
         email = findViewById(R.id.editTextEmail);
         password = findViewById(R.id.editTextPassword);
-        loginButton = findViewById(R.id.button); // Ensure this ID matches the login button in XML
-        signUpLink = findViewById(R.id.textView8); // "Sign up now!" text
+        loginButton = findViewById(R.id.button);
+        signUpText = findViewById(R.id.textView8); // "Sign up now!" text
 
         // Handle Sign In Button Click
         loginButton.setOnClickListener(new View.OnClickListener() {
@@ -40,13 +40,11 @@ public class SignInActivity extends AppCompatActivity {
             }
         });
 
-        // Handle Redirect to SignUpActivity
-        signUpLink.setOnClickListener(new View.OnClickListener() {
+        // Handle Click on "Sign up now!" Text
+        signUpText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(SignInActivity.this, SignUpActivity.class);
-                startActivity(intent);
-                finish();
+                openSignUpPage();
             }
         });
     }
@@ -80,5 +78,10 @@ public class SignInActivity extends AppCompatActivity {
                         Toast.makeText(SignInActivity.this, "Login Failed: " + errorMessage, Toast.LENGTH_LONG).show();
                     }
                 });
+    }
+
+    private void openSignUpPage() {
+        Intent intent = new Intent(SignInActivity.this, SignUpActivity.class);
+        startActivity(intent);
     }
 }
