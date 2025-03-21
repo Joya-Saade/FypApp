@@ -31,6 +31,14 @@ public class EmergencyContactActivity extends AppCompatActivity {
     private FirebaseUser currentUser;
 
     private EditText inputName, inputEmail, inputPhone;
+
+    private TextView userName, userEmail, userPhone;
+    private CardView personalInfoCard;
+    private LinearLayout personalInputLayout;
+    private EditText editUserPhone;
+    private Button btnSavePersonalInfo;
+    private Button btnEditPersonalInfo;
+
     private TextView contactName, contactEmail, contactPhone, contactTitle;
     private Button btnSaveContact, btnEditContact, btnSendEmergencyEmail;
     private LinearLayout inputLayout;
@@ -56,14 +64,26 @@ public class EmergencyContactActivity extends AppCompatActivity {
         contactEmail = findViewById(R.id.contactEmail);
         contactPhone = findViewById(R.id.contactPhone);
         contactTitle = findViewById(R.id.contactTitle);
+        personalInfoCard = findViewById(R.id.personalInfoCard);
+        userName = findViewById(R.id.personalName);
+        userEmail = findViewById(R.id.personalEmail);
+        userPhone = findViewById(R.id.personalPhone);
+        editUserPhone = findViewById(R.id.editUserPhone);
+        btnSavePersonalInfo = findViewById(R.id.btnSavePersonalInfo);
+        personalInputLayout = findViewById(R.id.personalInputLayout);
+        btnSavePersonalInfo.setOnClickListener(v -> savePersonalInfo());
+
         btnSaveContact = findViewById(R.id.btnSaveContact);
         btnEditContact = findViewById(R.id.btnEditContact);
+        btnEditPersonalInfo = findViewById(R.id.btnEditPersonalInfo);
+        btnEditPersonalInfo.setOnClickListener(v -> enablePersonalEditing());
         btnSendEmergencyEmail = findViewById(R.id.btnSendEmergencyEmail);
 
         // Load emergency contact details & listen for emergency triggers
         loadEmergencyContact();
         listenForEmergencyTrigger();
 
+        btnEditPersonalInfo.setOnClickListener(v -> enablePersonalEditing());
         btnSaveContact.setOnClickListener(v -> saveEmergencyContact());
         btnEditContact.setOnClickListener(v -> enableEditing());
         btnSendEmergencyEmail.setOnClickListener(v -> sendEmergencyEmail());
@@ -97,8 +117,31 @@ public class EmergencyContactActivity extends AppCompatActivity {
         });
     }
 
+    /*** 🔥 Load User Personal Information ***/
+    private void loadPersonalInfo() {
+        if (currentUser == null) return;
+        String userId = currentUser.getUid();
+        DocumentReference userRef = db.collection("Users").document(userId);
+
+        userRef.get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                String name = documentSnapshot.getString("name");
+                String email = documentSnapshot.getString("email");
+                String phone = documentSnapshot.getString("phone");
+
+                userName.setText("Name: " + name);
+                userEmail.setText("Email: " + email);
+                userPhone.setText("Phone: " + (phone == null || phone.isEmpty() ? "Not Set" : phone));
+
+                personalInfoCard.setVisibility(View.VISIBLE);
+                personalInputLayout.setVisibility(View.GONE);
+            }
+        });
+    }
+
     /*** 🔥 Load Emergency Contact from Firestore ***/
     private void loadEmergencyContact() {
+        loadPersonalInfo();
         if (currentUser == null) return;
         String userId = currentUser.getUid();
         DocumentReference contactRef = db.collection("EmergencyContacts").document(userId);
@@ -128,6 +171,8 @@ public class EmergencyContactActivity extends AppCompatActivity {
         });
     }
 
+
+
     /*** 🔥 Save Emergency Contact ***/
     private void saveEmergencyContact() {
         if (currentUser == null) return;
@@ -154,6 +199,34 @@ public class EmergencyContactActivity extends AppCompatActivity {
                 })
                 .addOnFailureListener(e -> Toast.makeText(this, "Error Saving Contact!", Toast.LENGTH_SHORT).show());
     }
+
+    /*** 🔥 Save User Personal Information ***/
+    private void savePersonalInfo() {
+        if (currentUser == null) return;
+        String userId = currentUser.getUid();
+
+        String phone = editUserPhone.getText().toString().trim();
+
+        Map<String, Object> personalData = new HashMap<>();
+        personalData.put("phone", phone);
+
+        db.collection("Users").document(userId)
+                .update(personalData)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(this, "Personal Info Updated!", Toast.LENGTH_SHORT).show();
+
+                    // Update the UI immediately
+                    userPhone.setText("Phone: " + phone);
+
+                    // Hide input layout, show card again
+                    personalInfoCard.setVisibility(View.VISIBLE);
+                    personalInputLayout.setVisibility(View.GONE);
+                    btnEditPersonalInfo.setVisibility(View.VISIBLE);
+                })
+                .addOnFailureListener(e -> Toast.makeText(this, "Error Saving Data!", Toast.LENGTH_SHORT).show());
+    }
+
+
 
     /*** 🔥 Enable Editing of Contact Info ***/
     private void enableEditing() {
@@ -208,6 +281,17 @@ public class EmergencyContactActivity extends AppCompatActivity {
         new JavaMailAPI(emergencyEmail, subject, message).execute();
         Toast.makeText(this, "Emergency email sent!", Toast.LENGTH_SHORT).show();
     }
+
+    private void enablePersonalEditing() {
+        personalInfoCard.setVisibility(View.GONE);
+        personalInputLayout.setVisibility(View.VISIBLE);
+
+        // Show Save button and hide Edit button
+        btnSavePersonalInfo.setVisibility(View.VISIBLE);
+        btnEditPersonalInfo.setVisibility(View.GONE);
+    }
+
+
 
     /*** 🔥 Reset Emergency Trigger in Firebase ***/
     private void resetEmergencyTrigger() {

@@ -12,6 +12,11 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class SignUpActivity extends AppCompatActivity {
     private EditText fullName, email, password, confirmPassword;
@@ -87,8 +92,16 @@ public class SignUpActivity extends AppCompatActivity {
 
                             // Store user data in Firebase Realtime Database
                             User newUser = new User(userFullName, userEmail);
-                            databaseReference.child(userId).setValue(newUser)
+                            Map<String, Object> userMap = new HashMap<>();
+                            userMap.put("name", userFullName);
+                            userMap.put("email", userEmail);
+                            userMap.put("phone", ""); // Default empty phone number
+
+                            FirebaseFirestore db = FirebaseFirestore.getInstance();
+                            db.collection("Users").document(userId)
+                                    .set(userMap, SetOptions.merge()) // Ensure it does not overwrite future updates
                                     .addOnCompleteListener(task1 -> {
+
                                         if (task1.isSuccessful()) {
                                             Toast.makeText(SignUpActivity.this, "Registration Successful!", Toast.LENGTH_SHORT).show();
                                             Intent intent = new Intent(SignUpActivity.this, SignInActivity.class);
