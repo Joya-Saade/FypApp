@@ -1,6 +1,8 @@
 package com.example.halo_test;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -12,7 +14,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.app.ActivityCompat;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -270,17 +275,80 @@ public class EmergencyContactActivity extends AppCompatActivity {
             return;
         }
 
-        String subject = "🚨 Emergency Alert: Immediate Assistance Required!";
-        String message = "Dear Emergency Contact,\n\n"
-                + "🚑 Your friend has been in a serious accident and needs immediate assistance.\n\n"
-                + "📍 Last Known Location: [Include GPS Coordinates Here]\n\n"
-                + "Please take immediate action or contact the authorities.\n\n"
-                + "**This is an automated emergency alert from the HALO Smart Helmet System.**\n\n"
-                + "Best regards,\nHALO Emergency System";
+        if (currentUser == null) return;
+        String userId = currentUser.getUid();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        new JavaMailAPI(emergencyEmail, subject, message).execute();
-        Toast.makeText(this, "Emergency email sent!", Toast.LENGTH_SHORT).show();
+        // 🔥 Check location permissions first
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1001);
+            return;
+        }
+
+        // 🔥 Fetch current location before sending email
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(location -> {
+                    if (location != null) {
+                        double latitude = location.getLatitude();
+                        double longitude = location.getLongitude();
+
+                        // 🔥 Store latest location in Firestore
+                        Map<String, Object> locationData = new HashMap<>();
+                        locationData.put("latitude", latitude);
+                        locationData.put("longitude", longitude);
+
+                        db.collection("Users").document(userId)
+                                .set(locationData, SetOptions.merge())
+                                .addOnSuccessListener(aVoid -> {
+                                    Log.d("Firestore", "✅ Last location updated.");
+                                    fetchLocationAndSendEmail(userId, emergencyEmail);
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e("Firestore", "❌ Error updating last location.", e);
+                                    Toast.makeText(this, "Failed to update location!", Toast.LENGTH_SHORT).show();
+                                });
+
+                    } else {
+                        Log.e("Location", "❌ Failed to retrieve current location!");
+                        Toast.makeText(this, "Could not get location. Ensure GPS is enabled.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> Log.e("Location", "❌ Location fetch failed.", e));
     }
+
+    private void fetchLocationAndSendEmail(String userId, String emergencyEmail) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("Users").document(userId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Double latitude = documentSnapshot.getDouble("latitude");
+                        Double longitude = documentSnapshot.getDouble("longitude");
+
+                        String locationLink = "N/A";
+                        if (latitude != null && longitude != null) {
+                            locationLink = "https://www.google.com/maps/search/?api=1&query=" + latitude + "," + longitude;
+                        }
+
+                        // ✅ Format the email with the last location
+                        String subject = "🚨 Emergency Alert: Immediate Assistance Required!";
+                        String message = "Dear Emergency Contact,\n\n"
+                                + "🚑 Your friend has been in a serious accident and needs immediate assistance.\n\n"
+                                + "📍 Last Known Location: " + locationLink + "\n\n"
+                                + "Please take immediate action or contact the authorities.\n\n"
+                                + "**This is an automated emergency alert from the HALO Smart Helmet System.**\n\n"
+                                + "Best regards,\nHALO Emergency System";
+
+                        new JavaMailAPI(emergencyEmail, subject, message).execute();
+                        Toast.makeText(this, "Emergency email sent!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "No last location found!", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> Log.e("Firestore", "❌ Failed to fetch last location.", e));
+    }
+
 
     private void enablePersonalEditing() {
         personalInfoCard.setVisibility(View.GONE);

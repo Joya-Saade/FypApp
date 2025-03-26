@@ -8,6 +8,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,6 +33,13 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
     private GoogleMap gMap;
@@ -183,6 +191,28 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .title("You are here"));
 
         gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 18));
+
+        // 🔥 Save Last Location to Firestore
+        saveLastLocationToFirestore(location);
+    }
+
+    private void saveLastLocationToFirestore(Location location) {
+        if (currentLocation == null) return;
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        String userId = user.getUid();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        Map<String, Object> locationData = new HashMap<>();
+        locationData.put("latitude", location.getLatitude());
+        locationData.put("longitude", location.getLongitude());
+
+        db.collection("Users").document(userId)
+                .set(locationData, SetOptions.merge()) // Use merge to prevent overwriting other fields
+                .addOnSuccessListener(aVoid -> Log.d("Firestore", "✅ Last location updated."))
+                .addOnFailureListener(e -> Log.e("Firestore", "❌ Error updating last location.", e));
     }
 
     private void showDestinationPopup() {
