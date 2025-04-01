@@ -6,6 +6,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,9 +29,14 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class RecordActivity extends AppCompatActivity implements OnMapReadyCallback {
     private GoogleMap gMap;
@@ -160,8 +166,35 @@ public class RecordActivity extends AppCompatActivity implements OnMapReadyCallb
         isRecording = false;
         handler.removeCallbacks(updateTimerRunnable);
 
+        saveRidePathToFirestore();
+
         Toast.makeText(this, "Recording stopped", Toast.LENGTH_SHORT).show();
         finish(); // Return to previous activity
+    }
+
+    private void saveRidePathToFirestore() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        String userId = user.getUid();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        String rideId = db.collection("Users").document(userId).collection("Rides").document().getId();
+
+        Map<String, Object> rideData = new HashMap<>();
+        rideData.put("path", recordedPath);  // Store the recorded path (List of LatLng)
+        rideData.put("timestamp", System.currentTimeMillis()); // Optional: Timestamp of the ride
+
+        db.collection("Users").document(userId).collection("Rides").document(rideId)
+                .set(rideData)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("Firestore", "Ride path saved successfully");
+                    Toast.makeText(this, "Ride saved successfully!", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Firestore", "Error saving ride path", e);
+                    Toast.makeText(this, "Error saving ride", Toast.LENGTH_SHORT).show();
+                });
     }
 
     private Runnable updateTimerRunnable = new Runnable() {
