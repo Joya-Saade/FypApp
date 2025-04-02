@@ -49,9 +49,9 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.RideViewHolder
 
         holder.mapView.getMapAsync(googleMap -> {
             if (path != null && !path.isEmpty()) {
-                PolylineOptions options = new PolylineOptions().addAll(path).width(5).color(Color.BLUE);
+                PolylineOptions options = new PolylineOptions().addAll(path).width(8).color(Color.BLUE);
                 googleMap.addPolyline(options);
-                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(path.get(0), 12));
+                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(path.get(0), 16));
             }
         });
 

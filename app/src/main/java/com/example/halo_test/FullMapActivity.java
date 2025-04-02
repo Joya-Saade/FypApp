@@ -39,7 +39,7 @@ public class FullMapActivity extends AppCompatActivity implements OnMapReadyCall
         fullMap = googleMap;
         if (ridePath != null && !ridePath.isEmpty()) {
             fullMap.addPolyline(new PolylineOptions().addAll(ridePath).width(8).color(Color.RED));
-            fullMap.moveCamera(CameraUpdateFactory.newLatLngZoom(ridePath.get(0), 14));
+            fullMap.moveCamera(CameraUpdateFactory.newLatLngZoom(ridePath.get(0), 18));
         }
     }
 }

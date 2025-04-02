@@ -156,7 +156,7 @@ public class RecordActivity extends AppCompatActivity implements OnMapReadyCallb
                 .color(0xFFFF0000)); // Red Lines
 
 
-        gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPoint, 12), 800, null);
+        gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPoint, 18), 800, null);
     }
 
     private void stopRecording() {

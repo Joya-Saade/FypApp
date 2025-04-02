@@ -180,7 +180,7 @@ public class HistoryActivity extends AppCompatActivity implements OnMapReadyCall
                         // 🚀 Update Summary Box
                         ((TextView) findViewById(R.id.totalRides)).setText("Rides: " + rides.size());
                         ((TextView) findViewById(R.id.totalDistance)).setText(String.format("Distance: %.2f km", totalDistanceKm));
-                        ((TextView) findViewById(R.id.totalTime)).setText("Time: -- min"); // Optional
+                        ((TextView) findViewById(R.id.totalTime)).setText("Time: -- min"); //change time here
                         // Show rides
                         RideAdapter adapter = new RideAdapter(rides, this);
                         RecyclerView recyclerView = findViewById(R.id.rideRecyclerView);
@@ -222,7 +222,7 @@ public class HistoryActivity extends AppCompatActivity implements OnMapReadyCall
             Toast.makeText(this, "No saved rides found.", Toast.LENGTH_SHORT).show();
         } else {
             // Zoom to the first saved location if any
-            gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(savedPath.get(0), 12));
+            gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(savedPath.get(0), 16));
         }
     }
 
